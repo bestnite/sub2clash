@@ -16,6 +16,7 @@ function clearExistingValues() {
   document.getElementById("sub").value = "";
   document.getElementById("proxy").value = "";
   document.getElementById("refresh").checked = false;
+  document.getElementById("skipErrors").checked = false;
   document.getElementById("autoTest").checked = false;
   document.getElementById("lazy").checked = false;
   document.getElementById("igcg").checked = false;
@@ -102,6 +103,8 @@ function generateURI() {
   // 获取复选框的值
   const refresh = document.getElementById("refresh").checked;
   queryParams.push(`refresh=${refresh ? "true" : "false"}`);
+  const skipErrors = document.getElementById("skipErrors").checked;
+  queryParams.push(`skipErrors=${skipErrors ? "true" : "false"}`);
   const autoTest = document.getElementById("autoTest").checked;
   queryParams.push(`autoTest=${autoTest ? "true" : "false"}`);
   const lazy = document.getElementById("lazy").checked;
@@ -280,6 +283,11 @@ async function parseInputURL() {
   if (params.has("refresh")) {
     document.getElementById("refresh").checked =
       params.get("refresh") === "true";
+  }
+
+  if (params.has("skipErrors")) {
+    document.getElementById("skipErrors").checked =
+      params.get("skipErrors") === "true";
   }
 
   if (params.has("autoTest")) {
