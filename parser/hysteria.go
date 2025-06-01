@@ -52,7 +52,7 @@ func ParseHysteria(proxy string) (model.Proxy, error) {
 
 	query := link.Query()
 
-	protocol, auth, insecure, upmbps, downmbps, obfs, alpnStr := query.Get("protocol"), query.Get("auth"), query.Get("insecure"), query.Get("upmbps"), query.Get("downmbps"), query.Get("obfs"), query.Get("alpn")
+	protocol, authStr, insecure, upmbps, downmbps, obfs, alpnStr := query.Get("protocol"), query.Get("auth_str"), query.Get("insecure"), query.Get("upmbps"), query.Get("downmbps"), query.Get("obfs"), query.Get("alpn")
 	insecureBool, err := strconv.ParseBool(insecure)
 	if err != nil {
 		insecureBool = false
@@ -77,7 +77,7 @@ func ParseHysteria(proxy string) (model.Proxy, error) {
 		Port:           port,
 		Up:             upmbps,
 		Down:           downmbps,
-		Auth:           auth,
+		AuthString:     authStr,
 		Obfs:           obfs,
 		SkipCertVerify: insecureBool,
 		Alpn:           alpn,
