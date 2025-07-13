@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -168,7 +169,19 @@ func GetRawConfHandler(c *gin.Context) {
 		return
 	}
 
-	response, err := http.Get("http://" + strings.TrimSuffix(config.GlobalConfig.Address, "/") + "/" + shortLink.Url)
+	scheme := "http"
+	if c.Request.TLS != nil {
+		scheme = "https"
+	}
+	host := c.Request.Host
+	targetPath := strings.TrimPrefix(shortLink.Url, "/")
+	requestURL := fmt.Sprintf("%s://%s/%s", scheme, host, targetPath)
+	
+	client := &http.Client{
+		Timeout: 30 * time.Second, // 30秒超时
+	}
+	
+	response, err := client.Get(requestURL)
 	if err != nil {
 		respondWithError(c, http.StatusInternalServerError, "请求错误: "+err.Error())
 		return
