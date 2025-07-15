@@ -18,7 +18,7 @@ func (p *SocksParser) SupportMeta() bool {
 }
 
 func (p *SocksParser) GetPrefixes() []string {
-	return []string{"socks://"}
+	return []string{"socks://", "socks5://"}
 }
 
 func (p *SocksParser) GetType() string {
