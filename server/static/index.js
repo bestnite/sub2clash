@@ -49,141 +49,138 @@ function clearExistingValues() {
 }
 
 function generateURI() {
-  const queryParams = [];
+  const config = {};
 
-  // 获取 API Endpoint
-  const endpoint = document.getElementById("endpoint").value;
+  config.clashType = parseInt(document.getElementById("endpoint").value);
 
-  // 获取并组合订阅链接
   let subLines = document
     .getElementById("sub")
     .value.split("\n")
     .filter((line) => line.trim() !== "");
-  let noSub = false;
-  // 去除 subLines 中空元素
-  subLines = subLines.map((item) => {
-    if (item !== "") {
-      return item;
-    }
-  });
   if (subLines.length > 0) {
-    queryParams.push(`sub=${encodeURIComponent(subLines.join(","))}`);
-  } else {
-    noSub = true;
+    config.subscriptions = subLines;
   }
 
-  // 获取并组合节点分享链接
   let proxyLines = document
     .getElementById("proxy")
     .value.split("\n")
     .filter((line) => line.trim() !== "");
-  let noProxy = false;
-  // 去除 proxyLines 中空元素
-  proxyLines = proxyLines.map((item) => {
-    if (item !== "") {
-      return item;
-    }
-  });
   if (proxyLines.length > 0) {
-    queryParams.push(`proxy=${encodeURIComponent(proxyLines.join(","))}`);
-  } else {
-    noProxy = true;
+    config.proxies = proxyLines;
   }
-  if (noSub && noProxy) {
-    // alert("订阅链接和节点分享链接不能同时为空！");
+
+  if (
+    (config.subscriptions === undefined || config.subscriptions.length === 0) &&
+    (config.proxies === undefined || config.proxies.length === 0)
+  ) {
     return "";
   }
 
-  // 获取订阅user-agent标识
-  const userAgent = document.getElementById("user-agent").value;
-  queryParams.push(`userAgent=${encodeURIComponent(userAgent)}`);
+  config.userAgent = document.getElementById("user-agent").value;
 
-  // 获取复选框的值
-  const refresh = document.getElementById("refresh").checked;
-  queryParams.push(`refresh=${refresh ? "true" : "false"}`);
-  const autoTest = document.getElementById("autoTest").checked;
-  queryParams.push(`autoTest=${autoTest ? "true" : "false"}`);
-  const lazy = document.getElementById("lazy").checked;
-  queryParams.push(`lazy=${lazy ? "true" : "false"}`);
-  const nodeList = document.getElementById("nodeList").checked;
-  queryParams.push(`nodeList=${nodeList ? "true" : "false"}`);
-  const igcg = document.getElementById("igcg").checked;
-  queryParams.push(`ignoreCountryGroup=${igcg ? "true" : "false"}`);
-  const useUDP = document.getElementById("useUDP").checked;
-  queryParams.push(`useUDP=${useUDP ? "true" : "false"}`);
+  config.refresh = document.getElementById("refresh").checked;
+  config.autoTest = document.getElementById("autoTest").checked;
+  config.lazy = document.getElementById("lazy").checked;
+  config.nodeList = document.getElementById("nodeList").checked;
+  config.ignoreCountryGroup = document.getElementById("igcg").checked;
+  config.useUDP = document.getElementById("useUDP").checked;
 
-  // 获取模板链接或名称（如果存在）
   const template = document.getElementById("template").value;
   if (template.trim() !== "") {
-    queryParams.push(`template=${encodeURIComponent(template)}`);
+    config.template = template;
   }
 
-  // 获取Rule Provider和规则
-  const ruleProviders = document.getElementsByName("ruleProvider");
-  const rules = document.getElementsByName("rule");
-  let providers = [];
-  for (let i = 0; i < ruleProviders.length / 5; i++) {
-    let baseIndex = i * 5;
-    let behavior = ruleProviders[baseIndex].value;
-    let url = ruleProviders[baseIndex + 1].value;
-    let group = ruleProviders[baseIndex + 2].value;
-    let prepend = ruleProviders[baseIndex + 3].value;
-    let name = ruleProviders[baseIndex + 4].value;
-    // 是否存在空值
-    if (
-      behavior.trim() === "" ||
-      url.trim() === "" ||
-      group.trim() === "" ||
-      prepend.trim() === "" ||
-      name.trim() === ""
-    ) {
-      // alert("Rule Provider 中存在空值，请检查后重试！");
-      return "";
-    }
-    providers.push(`[${behavior},${url},${group},${prepend},${name}]`);
-  }
-  queryParams.push(`ruleProvider=${encodeURIComponent(providers.join(","))}`);
-
-  let ruleList = [];
-  for (let i = 0; i < rules.length / 2; i++) {
-    if (rules[i * 2].value.trim() !== "") {
-      let rule = rules[i * 2].value;
-      let prepend = rules[i * 2 + 1].value;
-      // 是否存在空值
-      if (rule.trim() === "" || prepend.trim() === "") {
-        // alert("Rule 中存在空值，请检查后重试！");
+  const ruleProvidersElements = document.getElementsByName("ruleProvider");
+  if (ruleProvidersElements.length > 0) {
+    const ruleProviders = [];
+    for (let i = 0; i < ruleProvidersElements.length / 5; i++) {
+      let baseIndex = i * 5;
+      let behavior = ruleProvidersElements[baseIndex].value;
+      let url = ruleProvidersElements[baseIndex + 1].value;
+      let group = ruleProvidersElements[baseIndex + 2].value;
+      let prepend = ruleProvidersElements[baseIndex + 3].value;
+      let name = ruleProvidersElements[baseIndex + 4].value;
+      if (
+        behavior.trim() === "" ||
+        url.trim() === "" ||
+        group.trim() === "" ||
+        prepend.trim() === "" ||
+        name.trim() === ""
+      ) {
         return "";
       }
-      ruleList.push(`[${rule},${prepend}]`);
+      ruleProviders.push({
+        behavior: behavior,
+        url: url,
+        group: group,
+        prepend: prepend.toLowerCase() === "true",
+        name: name,
+      });
+    }
+    if (ruleProviders.length > 0) {
+      config.ruleProviders = ruleProviders;
     }
   }
-  queryParams.push(`rule=${encodeURIComponent(ruleList.join(","))}`);
 
-  // 获取排序策略
-  const sort = document.getElementById("sort").value;
-  queryParams.push(`sort=${sort}`);
+  const rulesElements = document.getElementsByName("rule");
+  if (rulesElements.length > 0) {
+    const rules = [];
+    for (let i = 0; i < rulesElements.length / 2; i++) {
+      if (rulesElements[i * 2].value.trim() !== "") {
+        let rule = rulesElements[i * 2].value;
+        let prepend = rulesElements[i * 2 + 1].value;
+        if (rule.trim() === "" || prepend.trim() === "") {
+          return "";
+        }
+        rules.push({
+          rule: rule,
+          prepend: prepend.toLowerCase() === "true",
+        });
+      }
+    }
+    if (rules.length > 0) {
+      config.rules = rules;
+    }
+  }
 
-  // 获取删除节点的正则表达式
+  config.sort = document.getElementById("sort").value;
+
   const remove = document.getElementById("remove").value;
   if (remove.trim() !== "") {
-    queryParams.push(`remove=${encodeURIComponent(remove)}`);
+    config.remove = remove;
   }
 
-  // 获取替换节点名称的正则表达式
-  let replaceList = [];
-  const replaces = document.getElementsByName("replace");
-  for (let i = 0; i < replaces.length / 2; i++) {
-    let replaceStr = `<${replaces[i * 2].value}>`;
-    let replaceTo = `<${replaces[i * 2 + 1].value}>`;
-    if (replaceStr.trim() === "") {
-      // alert("重命名设置中存在空值，请检查后重试！");
-      return "";
+  const replacesElements = document.getElementsByName("replace");
+  if (replacesElements.length > 0) {
+    const replace = {};
+    for (let i = 0; i < replacesElements.length / 2; i++) {
+      let replaceStr = replacesElements[i * 2].value;
+      let replaceTo = replacesElements[i * 2 + 1].value;
+      if (replaceStr.trim() === "") {
+        return "";
+      }
+      replace[replaceStr] = replaceTo;
     }
-    replaceList.push(`[${replaceStr},${replaceTo}]`);
+    if (Object.keys(replace).length > 0) {
+      config.replace = replace;
+    }
   }
-  queryParams.push(`replace=${encodeURIComponent(replaceList.join(","))}`);
 
-  return `${endpoint}?${queryParams.join("&")}`;
+  const jsonString = JSON.stringify(config);
+  // 解决 btoa 中文报错，使用 TextEncoder 进行 UTF-8 编码再 base64
+  function base64EncodeUnicode(str) {
+    const bytes = new TextEncoder().encode(str);
+    let binary = '';
+    bytes.forEach((b) => binary += String.fromCharCode(b));
+    return btoa(binary);
+  }
+  const encoded = base64EncodeUnicode(jsonString);
+  const urlSafeBase64 = encoded
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=/g, "");
+
+  return `convert/${urlSafeBase64}`;
 }
 
 // 将输入框中的 URL 解析为参数
@@ -216,11 +213,11 @@ async function parseInputURL() {
     q.append("password", password);
     try {
       const response = await axios.get("./short?" + q.toString());
-      url = new URL(window.location.href + response.data);
+      url = new URL(response.data, window.location.href);
 
       // 回显配置链接
       const apiLinkInput = document.querySelector("#apiLink");
-      apiLinkInput.value = `${window.location.origin}${window.location.pathname}${response.data}`;
+      apiLinkInput.value = url.href;
       setInputReadOnly(apiLinkInput, true);
 
       // 回显短链相关信息
@@ -248,99 +245,106 @@ async function parseInputURL() {
       alert("获取短链失败，请检查密码！");
     }
   }
-  let params = new URLSearchParams(url.search);
-
-  // 分配值到对应的输入框
   const pathSections = url.pathname.split("/");
-  const lastSection = pathSections[pathSections.length - 1];
-  const clientTypeSelect = document.getElementById("endpoint");
-  switch (lastSection.toLowerCase()) {
-    case "meta":
-      clientTypeSelect.value = "meta";
-      break;
-    case "clash":
-    default:
-      clientTypeSelect.value = "clash";
-      break;
+  const convertIndex = pathSections.findIndex((s) => s === "convert");
+
+  if (convertIndex === -1 || convertIndex + 1 >= pathSections.length) {
+    alert("无效的配置链接，请确认链接为新版格式。");
+    return;
+  }
+  const base64Config = pathSections[convertIndex + 1];
+  let config;
+  try {
+    const regularBase64 = base64Config.replace(/-/g, "+").replace(/_/g, "/");
+    const decodedStr = atob(regularBase64);
+    config = JSON.parse(decodeURIComponent(escape(decodedStr)));
+  } catch (e) {
+    alert("解析配置失败！");
+    console.error(e);
+    return;
   }
 
-  if (params.has("sub")) {
-    document.getElementById("sub").value = decodeURIComponent(params.get("sub"))
-      .split(",")
-      .join("\n");
+  document.getElementById("endpoint").value = config.clashType || "1";
+
+  if (config.subscriptions) {
+    document.getElementById("sub").value = config.subscriptions.join("\n");
   }
 
-  if (params.has("proxy")) {
-    document.getElementById("proxy").value = decodeURIComponent(
-      params.get("proxy")
-    )
-      .split(",")
-      .join("\n");
+  if (config.proxies) {
+    document.getElementById("proxy").value = config.proxies.join("\n");
   }
 
-  if (params.has("refresh")) {
-    document.getElementById("refresh").checked =
-      params.get("refresh") === "true";
+  if (config.refresh) {
+    document.getElementById("refresh").checked = config.refresh;
   }
 
-  if (params.has("autoTest")) {
-    document.getElementById("autoTest").checked =
-      params.get("autoTest") === "true";
+  if (config.autoTest) {
+    document.getElementById("autoTest").checked = config.autoTest;
   }
 
-  if (params.has("lazy")) {
-    document.getElementById("lazy").checked = params.get("lazy") === "true";
+  if (config.lazy) {
+    document.getElementById("lazy").checked = config.lazy;
   }
 
-  if (params.has("template")) {
-    document.getElementById("template").value = decodeURIComponent(
-      params.get("template")
-    );
+  if (config.template) {
+    document.getElementById("template").value = config.template;
   }
 
-  if (params.has("sort")) {
-    document.getElementById("sort").value = params.get("sort");
+  if (config.sort) {
+    document.getElementById("sort").value = config.sort;
   }
 
-  if (params.has("remove")) {
-    document.getElementById("remove").value = decodeURIComponent(
-      params.get("remove")
-    );
+  if (config.remove) {
+    document.getElementById("remove").value = config.remove;
   }
 
-  if (params.has("userAgent")) {
-    document.getElementById("user-agent").value = decodeURIComponent(
-      params.get("userAgent")
-    );
+  if (config.userAgent) {
+    document.getElementById("user-agent").value = config.userAgent;
   }
 
-  if (params.has("ignoreCountryGroup")) {
-    document.getElementById("igcg").checked =
-      params.get("ignoreCountryGroup") === "true";
+  if (config.ignoreCountryGroup) {
+    document.getElementById("igcg").checked = config.ignoreCountryGroup;
   }
 
-  if (params.has("replace")) {
-    parseAndFillReplaceParams(decodeURIComponent(params.get("replace")));
+  if (config.replace) {
+    const replaceGroup = document.getElementById("replaceGroup");
+    for (const original in config.replace) {
+      const div = createReplace();
+      div.children[0].value = original;
+      div.children[1].value = config.replace[original];
+      replaceGroup.appendChild(div);
+    }
   }
 
-  if (params.has("ruleProvider")) {
-    parseAndFillRuleProviderParams(
-      decodeURIComponent(params.get("ruleProvider"))
-    );
+  if (config.ruleProviders) {
+    const ruleProviderGroup = document.getElementById("ruleProviderGroup");
+    for (const p of config.ruleProviders) {
+      const div = createRuleProvider();
+      div.children[0].value = p.behavior;
+      div.children[1].value = p.url;
+      div.children[2].value = p.group;
+      div.children[3].value = p.prepend;
+      div.children[4].value = p.name;
+      ruleProviderGroup.appendChild(div);
+    }
   }
 
-  if (params.has("rule")) {
-    parseAndFillRuleParams(decodeURIComponent(params.get("rule")));
+  if (config.rules) {
+    const ruleGroup = document.getElementById("ruleGroup");
+    for (const r of config.rules) {
+      const div = createRule();
+      div.children[0].value = r.rule;
+      div.children[1].value = r.prepend;
+      ruleGroup.appendChild(div);
+    }
   }
 
-  if (params.has("nodeList")) {
-    document.getElementById("nodeList").checked =
-      params.get("nodeList") === "true";
+  if (config.nodeList) {
+    document.getElementById("nodeList").checked = config.nodeList;
   }
 
-  if (params.has("useUDP")) {
-    document.getElementById("useUDP").checked =
-      params.get("useUDP") === "true";
+  if (config.useUDP) {
+    document.getElementById("useUDP").checked = config.useUDP;
   }
 }
 
@@ -349,51 +353,6 @@ function clearInputGroup(groupId) {
   const group = document.getElementById(groupId);
   while (group.children.length > 2) {
     group.removeChild(group.lastChild);
-  }
-}
-
-function parseAndFillReplaceParams(replaceParams) {
-  const replaceGroup = document.getElementById("replaceGroup");
-  let matches;
-  const regex = /\[(<.*?>),(<.*?>)\]/g;
-  const str = decodeURIComponent(replaceParams);
-  while ((matches = regex.exec(str)) !== null) {
-    const div = createReplace();
-    const original = matches[1].slice(1, -1); // Remove < and >
-    const replacement = matches[2].slice(1, -1); // Remove < and >
-
-    div.children[0].value = original;
-    div.children[1].value = replacement;
-    replaceGroup.appendChild(div);
-  }
-}
-
-function parseAndFillRuleProviderParams(ruleProviderParams) {
-  const ruleProviderGroup = document.getElementById("ruleProviderGroup");
-  let matches;
-  const regex = /\[(.*?),(.*?),(.*?),(.*?),(.*?)\]/g;
-  const str = decodeURIComponent(ruleProviderParams);
-  while ((matches = regex.exec(str)) !== null) {
-    const div = createRuleProvider();
-    div.children[0].value = matches[1];
-    div.children[1].value = matches[2];
-    div.children[2].value = matches[3];
-    div.children[3].value = matches[4];
-    div.children[4].value = matches[5];
-    ruleProviderGroup.appendChild(div);
-  }
-}
-
-function parseAndFillRuleParams(ruleParams) {
-  const ruleGroup = document.getElementById("ruleGroup");
-  let matches;
-  const regex = /\[(.*?),(.*?)\]/g;
-  const str = decodeURIComponent(ruleParams);
-  while ((matches = regex.exec(str)) !== null) {
-    const div = createRule();
-    div.children[0].value = matches[1];
-    div.children[1].value = matches[2];
-    ruleGroup.appendChild(div);
   }
 }
 

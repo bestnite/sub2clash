@@ -1,13 +1,13 @@
 package parser
 
 import (
-	"encoding/base64"
 	"errors"
 	"strconv"
 	"strings"
 	"unicode/utf8"
 
 	P "github.com/bestnite/sub2clash/model/proxy"
+	"github.com/bestnite/sub2clash/utils"
 )
 
 func hasPrefix(proxy string, prefixes []string) bool {
@@ -49,7 +49,7 @@ func isLikelyBase64(s string) bool {
 		}
 	}
 
-	decoded, err := DecodeBase64(s)
+	decoded, err := utils.DecodeBase64(s, true)
 	if err != nil {
 		return false
 	}
@@ -58,23 +58,6 @@ func isLikelyBase64(s string) bool {
 	}
 
 	return true
-}
-
-func DecodeBase64(s string) (string, error) {
-	s = strings.TrimSpace(s)
-
-	if strings.Contains(s, "-") || strings.Contains(s, "_") {
-		s = strings.ReplaceAll(s, "-", "+")
-		s = strings.ReplaceAll(s, "_", "/")
-	}
-	if len(s)%4 != 0 {
-		s += strings.Repeat("=", 4-len(s)%4)
-	}
-	decodeStr, err := base64.StdEncoding.DecodeString(s)
-	if err != nil {
-		return "", err
-	}
-	return string(decodeStr), nil
 }
 
 type ParseConfig struct {

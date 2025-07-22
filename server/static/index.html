@@ -82,8 +82,8 @@
         <div class="form-group mb-3">
             <label for="endpoint">客户端类型:</label>
             <select class="form-control" id="endpoint" name="endpoint">
-                <option value="clash">Clash</option>
-                <option value="meta" selected>Clash.Meta</option>
+                <option value="1">Clash</option>
+                <option value="2" selected>Clash.Meta</option>
             </select>
         </div>
         <!-- Template -->
@@ -180,6 +180,7 @@
             <div class="input-group mb-2">
                 <input class="form-control" id="apiLink" type="text" placeholder="链接" readonly
                     style="cursor: not-allowed;" />
+                <button class="btn btn-primary" onclick="generateURL()" type="button">生成配置</button>
                 <button class="btn btn-primary" onclick="copyToClipboard('apiLink',this)" type="button">
                     复制链接
                 </button>

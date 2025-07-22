@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	P "github.com/bestnite/sub2clash/model/proxy"
+	"github.com/bestnite/sub2clash/utils"
 )
 
 // ShadowsocksParser Shadowsocks协议解析器
@@ -43,7 +44,7 @@ func (p *ShadowsocksParser) Parse(config ParseConfig, proxy string) (P.Proxy, er
 				break
 			}
 		}
-		d, err := DecodeBase64(s[0])
+		d, err := utils.DecodeBase64(s[0], true)
 		if err != nil {
 			return P.Proxy{}, fmt.Errorf("%w: %s", ErrInvalidStruct, err.Error())
 		}
@@ -76,7 +77,7 @@ func (p *ShadowsocksParser) Parse(config ParseConfig, proxy string) (P.Proxy, er
 	password, hasPassword := link.User.Password()
 
 	if !hasPassword && isLikelyBase64(method) {
-		decodedStr, err := DecodeBase64(method)
+		decodedStr, err := utils.DecodeBase64(method, true)
 		if err == nil {
 			methodAndPass := strings.SplitN(decodedStr, ":", 2)
 			if len(methodAndPass) == 2 {
@@ -88,7 +89,7 @@ func (p *ShadowsocksParser) Parse(config ParseConfig, proxy string) (P.Proxy, er
 		}
 	}
 	if password != "" && isLikelyBase64(password) {
-		password, err = DecodeBase64(password)
+		password, err = utils.DecodeBase64(password, true)
 		if err != nil {
 			return P.Proxy{}, fmt.Errorf("%w: %s", ErrInvalidStruct, err.Error())
 		}

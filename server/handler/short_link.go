@@ -142,7 +142,6 @@ func UpdateLinkHandler(c *gin.Context) {
 }
 
 func GetRawConfHandler(c *gin.Context) {
-
 	hash := c.Param("hash")
 	password := c.Query("password")
 
@@ -176,11 +175,11 @@ func GetRawConfHandler(c *gin.Context) {
 	host := c.Request.Host
 	targetPath := strings.TrimPrefix(shortLink.Url, "/")
 	requestURL := fmt.Sprintf("%s://%s/%s", scheme, host, targetPath)
-	
+
 	client := &http.Client{
 		Timeout: 30 * time.Second, // 30秒超时
 	}
-	
+
 	response, err := client.Get(requestURL)
 	if err != nil {
 		respondWithError(c, http.StatusInternalServerError, "请求错误: "+err.Error())
@@ -198,7 +197,6 @@ func GetRawConfHandler(c *gin.Context) {
 }
 
 func GetRawConfUriHandler(c *gin.Context) {
-
 	hash := c.Query("hash")
 	password := c.Query("password")
 

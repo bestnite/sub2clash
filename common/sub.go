@@ -19,6 +19,7 @@ import (
 	"github.com/bestnite/sub2clash/model"
 	P "github.com/bestnite/sub2clash/model/proxy"
 	"github.com/bestnite/sub2clash/parser"
+	"github.com/bestnite/sub2clash/utils"
 	"go.uber.org/zap"
 	"gopkg.in/yaml.v3"
 )
@@ -92,7 +93,7 @@ func FetchSubscriptionFromAPI(url string, userAgent string, retryTimes int) ([]b
 	return data, nil
 }
 
-func BuildSub(clashType model.ClashType, query model.SubConfig, template string, cacheExpire int64, retryTimes int) (
+func BuildSub(clashType model.ClashType, query model.ConvertConfig, template string, cacheExpire int64, retryTimes int) (
 	*model.Subscription, error,
 ) {
 	var temp = &model.Subscription{}
@@ -160,7 +161,7 @@ func BuildSub(clashType model.ClashType, query model.SubConfig, template string,
 				}
 				newProxies = p
 			} else {
-				base64, err := parser.DecodeBase64(string(data))
+				base64, err := utils.DecodeBase64(string(data), true)
 				if err != nil {
 					logger.Logger.Debug(
 						"parse subscription failed", zap.String("url", query.Subs[i]),
@@ -186,7 +187,7 @@ func BuildSub(clashType model.ClashType, query model.SubConfig, template string,
 		proxyList = append(proxyList, newProxies...)
 	}
 
-	if len(query.Proxy) != 0 {
+	if len(query.Proxies) != 0 {
 		p, err := parser.ParseProxies(parser.ParseConfig{UseUDP: query.UseUDP}, query.Proxies...)
 		if err != nil {
 			return nil, err
@@ -236,22 +237,17 @@ func BuildSub(clashType model.ClashType, query model.SubConfig, template string,
 	}
 
 	// 替换
-	if len(query.ReplaceKeys) != 0 {
-		replaceRegs := make([]*regexp.Regexp, 0, len(query.ReplaceKeys))
-		for _, v := range query.ReplaceKeys {
-			replaceReg, err := regexp.Compile(v)
+	if len(query.Replace) != 0 {
+		for k, v := range query.Replace {
+			replaceReg, err := regexp.Compile(k)
 			if err != nil {
 				logger.Logger.Debug("replace regexp compile failed", zap.Error(err))
 				return nil, NewRegexInvalidError("replace", err)
 			}
-			replaceRegs = append(replaceRegs, replaceReg)
-		}
-		for i := range proxyList {
-
-			for j, v := range replaceRegs {
-				if v.MatchString(proxyList[i].Name) {
-					proxyList[i].Name = v.ReplaceAllString(
-						proxyList[i].Name, query.ReplaceTo[j],
+			for i := range proxyList {
+				if replaceReg.MatchString(proxyList[i].Name) {
+					proxyList[i].Name = replaceReg.ReplaceAllString(
+						proxyList[i].Name, v,
 					)
 				}
 			}
@@ -276,6 +272,7 @@ func BuildSub(clashType model.ClashType, query model.SubConfig, template string,
 	var t = &model.Subscription{}
 	AddProxy(t, query.AutoTest, query.Lazy, clashType, proxyList...)
 
+	// 排序
 	switch query.Sort {
 	case "sizeasc":
 		sort.Sort(model.ProxyGroupsSortBySize(t.ProxyGroup))

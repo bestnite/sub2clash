@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	P "github.com/bestnite/sub2clash/model/proxy"
+	"github.com/bestnite/sub2clash/utils"
 )
 
 type VmessJson struct {
@@ -57,7 +58,7 @@ func (p *VmessParser) Parse(config ParseConfig, proxy string) (P.Proxy, error) {
 			break
 		}
 	}
-	base64, err := DecodeBase64(proxy)
+	base64, err := utils.DecodeBase64(proxy, true)
 	if err != nil {
 		return P.Proxy{}, fmt.Errorf("%w: %s", ErrInvalidBase64, err.Error())
 	}

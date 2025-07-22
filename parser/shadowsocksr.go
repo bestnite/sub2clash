@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	P "github.com/bestnite/sub2clash/model/proxy"
+	"github.com/bestnite/sub2clash/utils"
 )
 
 type ShadowsocksRParser struct{}
@@ -39,7 +40,7 @@ func (p *ShadowsocksRParser) Parse(config ParseConfig, proxy string) (P.Proxy, e
 		}
 	}
 
-	proxy, err := DecodeBase64(proxy)
+	proxy, err := utils.DecodeBase64(proxy, true)
 	if err != nil {
 		return P.Proxy{}, fmt.Errorf("%w: %s", ErrInvalidBase64, err.Error())
 	}
@@ -55,7 +56,7 @@ func (p *ShadowsocksRParser) Parse(config ParseConfig, proxy string) (P.Proxy, e
 	protocol := parts[2]
 	method := parts[3]
 	obfs := parts[4]
-	password, err := DecodeBase64(parts[5])
+	password, err := utils.DecodeBase64(parts[5], true)
 	if err != nil {
 		return P.Proxy{}, fmt.Errorf("%w: %s", ErrInvalidStruct, err.Error())
 	}
@@ -73,13 +74,13 @@ func (p *ShadowsocksRParser) Parse(config ParseConfig, proxy string) (P.Proxy, e
 			return P.Proxy{}, fmt.Errorf("%w: %s", ErrCannotParseParams, err.Error())
 		}
 		if params.Get("obfsparam") != "" {
-			obfsParam, err = DecodeBase64(params.Get("obfsparam"))
+			obfsParam, err = utils.DecodeBase64(params.Get("obfsparam"), true)
 		}
 		if params.Get("protoparam") != "" {
-			protoParam, err = DecodeBase64(params.Get("protoparam"))
+			protoParam, err = utils.DecodeBase64(params.Get("protoparam"), true)
 		}
 		if params.Get("remarks") != "" {
-			remarks, err = DecodeBase64(params.Get("remarks"))
+			remarks, err = utils.DecodeBase64(params.Get("remarks"), true)
 		} else {
 			remarks = server + ":" + strconv.Itoa(port)
 		}

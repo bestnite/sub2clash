@@ -12,14 +12,14 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func SubHandler(model M.ClashType, template string) func(c *gin.Context) {
+func ConvertHandler(template string) func(c *gin.Context) {
 	return func(c *gin.Context) {
-		query, err := M.ParseSubQuery(c)
+		query, err := M.ParseConvertQuery(c)
 		if err != nil {
 			c.String(http.StatusBadRequest, err.Error())
 			return
 		}
-		sub, err := common.BuildSub(model, query, template, config.GlobalConfig.CacheExpire, config.GlobalConfig.RequestRetryTimes)
+		sub, err := common.BuildSub(query.ClashType, query, template, config.GlobalConfig.CacheExpire, config.GlobalConfig.RequestRetryTimes)
 		if err != nil {
 			c.String(http.StatusInternalServerError, err.Error())
 			return

@@ -8,7 +8,6 @@ import (
 
 	"github.com/bestnite/sub2clash/config"
 	"github.com/bestnite/sub2clash/constant"
-	"github.com/bestnite/sub2clash/model"
 	"github.com/bestnite/sub2clash/server/handler"
 	"github.com/bestnite/sub2clash/server/middleware"
 
@@ -40,8 +39,7 @@ func SetRoute(r *gin.Engine) {
 			)
 		},
 	)
-	r.GET("/clash", middleware.ZapLogger(), handler.SubHandler(model.Clash, config.GlobalConfig.ClashTemplate))
-	r.GET("/meta", middleware.ZapLogger(), handler.SubHandler(model.ClashMeta, config.GlobalConfig.MetaTemplate))
+	r.GET("/convert/:config", middleware.ZapLogger(), handler.ConvertHandler(config.GlobalConfig.ClashTemplate))
 	r.GET("/s/:hash", middleware.ZapLogger(), handler.GetRawConfHandler)
 	r.POST("/short", middleware.ZapLogger(), handler.GenerateLinkHandler)
 	r.PUT("/short", middleware.ZapLogger(), handler.UpdateLinkHandler)

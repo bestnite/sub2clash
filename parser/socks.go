@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	P "github.com/bestnite/sub2clash/model/proxy"
+	"github.com/bestnite/sub2clash/utils"
 )
 
 type SocksParser struct{}
@@ -59,7 +60,7 @@ func (p *SocksParser) Parse(config ParseConfig, proxy string) (P.Proxy, error) {
 	password, hasPassword := link.User.Password()
 
 	if !hasPassword && isLikelyBase64(username) {
-		decodedStr, err := DecodeBase64(username)
+		decodedStr, err := utils.DecodeBase64(username, true)
 		if err == nil {
 			usernameAndPassword := strings.SplitN(decodedStr, ":", 2)
 			if len(usernameAndPassword) == 2 {
