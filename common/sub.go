@@ -135,15 +135,15 @@ func BuildSub(clashType model.ClashType, query model.ConvertConfig, template str
 
 	for i := range query.Subs {
 		data, err := LoadSubscription(query.Subs[i], query.Refresh, query.UserAgent, cacheExpire, retryTimes)
-		subName := ""
-		if strings.Contains(query.Subs[i], "#") {
-			subName = query.Subs[i][strings.LastIndex(query.Subs[i], "#")+1:]
-		}
 		if err != nil {
 			logger.Logger.Debug(
 				"load subscription failed", zap.String("url", query.Subs[i]), zap.Error(err),
 			)
 			return nil, NewSubscriptionLoadError(query.Subs[i], err)
+		}
+		subName := ""
+		if strings.Contains(query.Subs[i], "#") {
+			subName = query.Subs[i][strings.LastIndex(query.Subs[i], "#")+1:]
 		}
 
 		err = yaml.Unmarshal(data, &sub)
@@ -161,7 +161,7 @@ func BuildSub(clashType model.ClashType, query model.ConvertConfig, template str
 				}
 				newProxies = p
 			} else {
-				base64, err := utils.DecodeBase64(string(data), true)
+				base64, err := utils.DecodeBase64(string(data), false)
 				if err != nil {
 					logger.Logger.Debug(
 						"parse subscription failed", zap.String("url", query.Subs[i]),
