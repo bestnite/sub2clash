@@ -1,3 +1,4 @@
+version: 2
 project_name: sub2clash
 builds:
   - env:
@@ -9,19 +10,15 @@ builds:
     goarch:
       - amd64
       - arm64
-      - arm
       - "386"
-    goarm:
-      - "6"
-      - "7"
     ldflags:
-      - -s -w -X sub2clash/constant.Version={{ .Version }}
+      - -s -w -X github.com/bestnite/sub2clash/constant.Version={{ .Version }}
     flags:
       - -trimpath
 archives:
-  - format: tar.gz
+  - formats: ["tar.gz"]
     format_overrides:
-      - format: zip
+      - formats: ["zip"]
         goos: windows
     wrap_in_directory: true
     files:
@@ -30,3 +27,19 @@ archives:
       - templates
 release:
   draft: true
+upx:
+  - enabled: true
+    compress: best
+nfpms:
+  - id: sub2clash
+    homepage: https://github.com/bestnite/sub2clash
+    maintainer: Nite <admin@nite07.com>
+    license: "MIT"
+    formats:
+      - apk
+      - deb
+      - rpm
+      - termux.deb
+      - archlinux
+    provides:
+      - sub2clash
