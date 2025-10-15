@@ -133,8 +133,8 @@ func NewTemplateLoadError(template string, cause error) *CommonError {
 	return NewError(ErrTemplateLoad, fmt.Sprintf("failed to load template: %s", template), cause)
 }
 
-func NewTemplateParseError(cause error) *CommonError {
-	return NewError(ErrTemplateParse, "failed to parse template", cause)
+func NewTemplateParseError(data []byte, cause error) *CommonError {
+	return NewError(ErrTemplateParse, fmt.Sprintf("failed to parse template: %s", data), cause)
 }
 
 // Subscription errors
@@ -142,8 +142,8 @@ func NewSubscriptionLoadError(url string, cause error) *CommonError {
 	return NewError(ErrSubscriptionLoad, fmt.Sprintf("failed to load subscription: %s", url), cause)
 }
 
-func NewSubscriptionParseError(cause error) *CommonError {
-	return NewError(ErrSubscriptionParse, "failed to parse subscription", cause)
+func NewSubscriptionParseError(data []byte, cause error) *CommonError {
+	return NewError(ErrSubscriptionParse, fmt.Sprintf("failed to parse subscription: %s", string(data)), cause)
 }
 
 // Regex errors

@@ -129,7 +129,7 @@ func BuildSub(clashType model.ClashType, query model.ConvertConfig, template str
 	err = yaml.Unmarshal(templateBytes, &temp)
 	if err != nil {
 		logger.Logger.Debug("parse template failed", zap.Error(err))
-		return nil, NewTemplateParseError(err)
+		return nil, NewTemplateParseError(templateBytes, err)
 	}
 	var proxyList []P.Proxy
 
@@ -168,7 +168,7 @@ func BuildSub(clashType model.ClashType, query model.ConvertConfig, template str
 						zap.String("data", string(data)),
 						zap.Error(err),
 					)
-					return nil, NewSubscriptionParseError(err)
+					return nil, NewSubscriptionParseError(data, err)
 				}
 				p, err := parser.ParseProxies(parser.ParseConfig{UseUDP: query.UseUDP}, strings.Split(base64, "\n")...)
 				if err != nil {
