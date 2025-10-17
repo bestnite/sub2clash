@@ -68,7 +68,7 @@ func (p *Hysteria2Parser) Parse(config ParseConfig, proxy string) (P.Proxy, erro
 		Name: remarks,
 		Hysteria2: P.Hysteria2{
 			Server:         server,
-			Port:           port,
+			Port:           P.IntOrString(port),
 			Password:       password,
 			Obfs:           obfs,
 			ObfsPassword:   obfsPassword,

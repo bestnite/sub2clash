@@ -79,7 +79,7 @@ func (p *SocksParser) Parse(config ParseConfig, proxy string) (P.Proxy, error) {
 		Name: remarks,
 		Socks: P.Socks{
 			Server:   server,
-			Port:     port,
+			Port:     P.IntOrString(port),
 			UserName: username,
 			Password: password,
 			TLS:      tls == "true",

@@ -94,7 +94,7 @@ func (p *ShadowsocksRParser) Parse(config ParseConfig, proxy string) (P.Proxy, e
 		Name: remarks,
 		ShadowSocksR: P.ShadowSocksR{
 			Server:        server,
-			Port:          port,
+			Port:          P.IntOrString(port),
 			Protocol:      protocol,
 			Cipher:        method,
 			Obfs:          obfs,

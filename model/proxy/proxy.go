@@ -2,9 +2,30 @@ package proxy
 
 import (
 	"fmt"
+	"strconv"
 
 	"gopkg.in/yaml.v3"
 )
+
+type IntOrString int
+
+func (i *IntOrString) UnmarshalYAML(value *yaml.Node) error {
+	intVal := 0
+	err := yaml.Unmarshal([]byte(value.Value), &intVal)
+	if err == nil {
+		*i = IntOrString(intVal)
+	}
+	strVal := ""
+	err = yaml.Unmarshal([]byte(value.Value), &strVal)
+	if err == nil {
+		_int, err := strconv.ParseInt(strVal, 10, 64)
+		if err != nil {
+			*i = IntOrString(_int)
+		}
+		return err
+	}
+	return nil
+}
 
 type HTTPOptions struct {
 	Method  string              `yaml:"method,omitempty"`

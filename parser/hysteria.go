@@ -76,7 +76,7 @@ func (p *HysteriaParser) Parse(config ParseConfig, proxy string) (P.Proxy, error
 		Name: remarks,
 		Hysteria: P.Hysteria{
 			Server:         server,
-			Port:           port,
+			Port:           P.IntOrString(port),
 			Up:             upmbps,
 			Down:           downmbps,
 			Auth:           auth,

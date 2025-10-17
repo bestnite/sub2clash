@@ -3,9 +3,9 @@ package proxy
 // https://github.com/MetaCubeX/mihomo/blob/Meta/adapter/outbound/vmess.go
 type Vmess struct {
 	Server              string         `yaml:"server"`
-	Port                int            `yaml:"port"`
+	Port                IntOrString    `yaml:"port"`
 	UUID                string         `yaml:"uuid"`
-	AlterID             int            `yaml:"alterId"`
+	AlterID             IntOrString    `yaml:"alterId"`
 	Cipher              string         `yaml:"cipher"`
 	UDP                 bool           `yaml:"udp,omitempty"`
 	Network             string         `yaml:"network,omitempty"`

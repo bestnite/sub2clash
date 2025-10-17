@@ -68,7 +68,7 @@ func (p *AnytlsParser) Parse(config ParseConfig, proxy string) (P.Proxy, error) 
 		Name: remarks,
 		Anytls: P.Anytls{
 			Server:         server,
-			Port:           port,
+			Port:           P.IntOrString(port),
 			Password:       password,
 			SNI:            sni,
 			SkipCertVerify: insecureBool,

@@ -66,7 +66,7 @@ func (p *VlessParser) Parse(config ParseConfig, proxy string) (P.Proxy, error) {
 
 	result := P.Vless{
 		Server:         server,
-		Port:           port,
+		Port:           P.IntOrString(port),
 		UUID:           uuid,
 		Flow:           flow,
 		UDP:            udp == "true",

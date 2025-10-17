@@ -3,7 +3,7 @@ package proxy
 // https://github.com/MetaCubeX/mihomo/blob/Meta/adapter/outbound/vless.go
 type Vless struct {
 	Server            string            `yaml:"server"`
-	Port              int               `yaml:"port"`
+	Port              IntOrString       `yaml:"port"`
 	UUID              string            `yaml:"uuid"`
 	Flow              string            `yaml:"flow,omitempty"`
 	TLS               bool              `yaml:"tls,omitempty"`

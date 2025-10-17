@@ -108,7 +108,7 @@ func (p *ShadowsocksParser) Parse(config ParseConfig, proxy string) (P.Proxy, er
 			Cipher:   method,
 			Password: password,
 			Server:   server,
-			Port:     port,
+			Port:     P.IntOrString(port),
 			UDP:      config.UseUDP,
 		},
 	}

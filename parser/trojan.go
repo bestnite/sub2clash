@@ -63,7 +63,7 @@ func (p *TrojanParser) Parse(config ParseConfig, proxy string) (P.Proxy, error) 
 	insecureBool := insecure == "1"
 	result := P.Trojan{
 		Server:         server,
-		Port:           port,
+		Port:           P.IntOrString(port),
 		Password:       password,
 		Network:        network,
 		UDP:            udp == "true",

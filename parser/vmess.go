@@ -109,9 +109,9 @@ func (p *VmessParser) Parse(config ParseConfig, proxy string) (P.Proxy, error) {
 
 	result := P.Vmess{
 		Server:  vmess.Add,
-		Port:    port,
+		Port:    P.IntOrString(port),
 		UUID:    vmess.Id,
-		AlterID: aid,
+		AlterID: P.IntOrString(aid),
 		Cipher:  vmess.Scy,
 		UDP:     config.UseUDP,
 	}

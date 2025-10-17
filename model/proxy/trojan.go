@@ -3,7 +3,7 @@ package proxy
 // https://github.com/MetaCubeX/mihomo/blob/Meta/adapter/outbound/trojan.go
 type Trojan struct {
 	Server            string         `yaml:"server"`
-	Port              int            `yaml:"port"`
+	Port              IntOrString    `yaml:"port"`
 	Password          string         `yaml:"password"`
 	ALPN              []string       `yaml:"alpn,omitempty"`
 	SNI               string         `yaml:"sni,omitempty"`
