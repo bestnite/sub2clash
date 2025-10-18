@@ -1,8 +1,8 @@
 package model
 
 type ShortLink struct {
-	Hash            string
-	Url             string
+	ID              string        `gorm:"unique"`
+	Config          ConvertConfig `gorm:"serializer:json"`
 	Password        string
 	LastRequestTime int64
 }

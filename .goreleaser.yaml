@@ -15,6 +15,12 @@ builds:
       - -s -w -X github.com/bestnite/sub2clash/constant.Version={{ .Version }}
     flags:
       - -trimpath
+    hooks:
+      pre:
+        - cmd: npm install
+          dir: server/frontend
+        - cmd: npm run build
+          dir: server/frontend
 archives:
   - formats: ["tar.gz"]
     format_overrides:

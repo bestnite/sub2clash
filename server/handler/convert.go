@@ -6,18 +6,26 @@ import (
 
 	"github.com/bestnite/sub2clash/common"
 	"github.com/bestnite/sub2clash/config"
+	"github.com/bestnite/sub2clash/model"
 	M "github.com/bestnite/sub2clash/model"
 
 	"github.com/gin-gonic/gin"
 	"gopkg.in/yaml.v3"
 )
 
-func ConvertHandler(template string) func(c *gin.Context) {
+func ConvertHandler() func(c *gin.Context) {
 	return func(c *gin.Context) {
 		query, err := M.ParseConvertQuery(c)
 		if err != nil {
 			c.String(http.StatusBadRequest, err.Error())
 			return
+		}
+		template := ""
+		switch query.ClashType {
+		case model.Clash:
+			template = config.GlobalConfig.ClashTemplate
+		case model.ClashMeta:
+			template = config.GlobalConfig.MetaTemplate
 		}
 		sub, err := common.BuildSub(query.ClashType, query, template, config.GlobalConfig.CacheExpire, config.GlobalConfig.RequestRetryTimes)
 		if err != nil {

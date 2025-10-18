@@ -5,7 +5,6 @@ import (
 	"io"
 
 	"github.com/bestnite/sub2clash/common"
-	"github.com/bestnite/sub2clash/common/database"
 	"github.com/bestnite/sub2clash/config"
 	"github.com/bestnite/sub2clash/logger"
 	"github.com/bestnite/sub2clash/server"
@@ -29,10 +28,6 @@ func init() {
 		logger.Logger.Panic("load config failed", zap.Error(err))
 	}
 
-	err = database.ConnectDB()
-	if err != nil {
-		logger.Logger.Panic("database connect failed", zap.Error(err))
-	}
 	logger.Logger.Info("database connect success")
 }
 

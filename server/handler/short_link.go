@@ -1,9 +1,10 @@
 package handler
 
 import (
-	"fmt"
-	"io"
+	"encoding/json"
+	"log"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -11,60 +12,64 @@ import (
 	"github.com/bestnite/sub2clash/common/database"
 	"github.com/bestnite/sub2clash/config"
 	"github.com/bestnite/sub2clash/model"
+	M "github.com/bestnite/sub2clash/model"
+	"gopkg.in/yaml.v3"
 
 	"github.com/gin-gonic/gin"
 )
 
 type shortLinkGenRequset struct {
-	Url      string `form:"url" binding:"required"`
-	Password string `form:"password"`
-	CustomID string `form:"customId"`
+	Config   model.ConvertConfig `form:"config" binding:"required"`
+	Password string              `form:"password"`
+	ID       string              `form:"id"`
 }
 
 type shortLinkUpdateRequest struct {
-	Hash     string `form:"hash" binding:"required"`
-	Url      string `form:"url" binding:"required"`
-	Password string `form:"password" binding:"required"`
+	Config   model.ConvertConfig `form:"config" binding:"required"`
+	Password string              `form:"password" binding:"required"`
+	ID       string              `form:"id" binding:"required"`
 }
 
-func respondWithError(c *gin.Context, code int, message string) {
-	c.String(code, message)
-	c.Abort()
+var DB *database.Database
+
+func init() {
+	var err error
+	DB, err = database.ConnectDB()
+	if err != nil {
+		log.Printf("failed to connect to database: %v", err)
+		os.Exit(1)
+	}
 }
 
 func GenerateLinkHandler(c *gin.Context) {
 	var params shortLinkGenRequset
 	if err := c.ShouldBind(&params); err != nil {
-		respondWithError(c, http.StatusBadRequest, "参数错误: "+err.Error())
-		return
-	}
-	if strings.TrimSpace(params.Url) == "" {
-		respondWithError(c, http.StatusBadRequest, "URL 不能为空")
+		c.String(http.StatusBadRequest, "参数错误: "+err.Error())
 		return
 	}
 
-	var hash string
+	var id string
 	var password string
 	var err error
 
-	if params.CustomID != "" {
+	if params.ID != "" {
 		// 检查自定义ID是否已存在
-		exists, err := database.CheckShortLinkHashExists(params.CustomID)
+		exists, err := DB.CheckShortLinkIDExists(params.ID)
 		if err != nil {
-			respondWithError(c, http.StatusInternalServerError, "数据库错误")
+			c.String(http.StatusInternalServerError, "数据库错误")
 			return
 		}
 		if exists {
-			respondWithError(c, http.StatusBadRequest, "短链已存在")
+			c.String(http.StatusBadRequest, "短链已存在")
 			return
 		}
-		hash = params.CustomID
+		id = params.ID
 		password = params.Password
 	} else {
 		// 自动生成短链ID和密码
-		hash, err = generateUniqueHash(config.GlobalConfig.ShortLinkLength)
+		id, err = generateUniqueHash(config.GlobalConfig.ShortLinkLength)
 		if err != nil {
-			respondWithError(c, http.StatusInternalServerError, "生成短链接失败")
+			c.String(http.StatusInternalServerError, "生成短链失败")
 			return
 		}
 		if params.Password == "" {
@@ -75,19 +80,19 @@ func GenerateLinkHandler(c *gin.Context) {
 	}
 
 	shortLink := model.ShortLink{
-		Hash:     hash,
-		Url:      params.Url,
+		ID:       id,
+		Config:   params.Config,
 		Password: password,
 	}
 
-	if err := database.SaveShortLink(&shortLink); err != nil {
-		respondWithError(c, http.StatusInternalServerError, "数据库错误")
+	if err := DB.CreateShortLink(&shortLink); err != nil {
+		c.String(http.StatusInternalServerError, "数据库错误")
 		return
 	}
 
 	// 返回生成的短链ID和密码
 	response := map[string]string{
-		"hash":     hash,
+		"id":       id,
 		"password": password,
 	}
 	c.JSON(http.StatusOK, response)
@@ -96,7 +101,7 @@ func GenerateLinkHandler(c *gin.Context) {
 func generateUniqueHash(length int) (string, error) {
 	for {
 		hash := common.RandomString(length)
-		exists, err := database.CheckShortLinkHashExists(hash)
+		exists, err := DB.CheckShortLinkIDExists(hash)
 		if err != nil {
 			return "", err
 		}
@@ -109,112 +114,140 @@ func generateUniqueHash(length int) (string, error) {
 func UpdateLinkHandler(c *gin.Context) {
 	var params shortLinkUpdateRequest
 	if err := c.ShouldBindJSON(&params); err != nil {
-		respondWithError(c, http.StatusBadRequest, "参数错误: "+err.Error())
+		c.String(http.StatusBadRequest, "参数错误: "+err.Error())
 		return
 	}
 
-	// 先获取原有的短链接
-	existingLink, err := database.FindShortLinkByHash(params.Hash)
+	// 先获取原有的短链
+	existingLink, err := DB.FindShortLinkByID(params.ID)
 	if err != nil {
-		respondWithError(c, http.StatusNotFound, "未找到短链接")
+		c.String(http.StatusUnauthorized, "短链不存在或密码错误")
 		return
 	}
 
 	// 验证密码
 	if existingLink.Password != params.Password {
-		respondWithError(c, http.StatusUnauthorized, "密码错误")
+		c.String(http.StatusUnauthorized, "短链不存在或密码错误")
 		return
 	}
 
-	// 更新URL，但保持原密码不变
-	shortLink := model.ShortLink{
-		Hash:     params.Hash,
-		Url:      params.Url,
-		Password: existingLink.Password, // 保持原密码不变
+	jsonData, err := json.Marshal(params.Config)
+	if err != nil {
+		c.String(http.StatusBadRequest, "配置格式错误")
+		return
 	}
-
-	if err := database.SaveShortLink(&shortLink); err != nil {
-		respondWithError(c, http.StatusInternalServerError, "数据库错误")
+	if err := DB.UpdataShortLink(params.ID, "config", jsonData); err != nil {
+		c.String(http.StatusInternalServerError, "数据库错误")
 		return
 	}
 
-	c.String(http.StatusOK, "短链接更新成功")
+	c.String(http.StatusOK, "短链更新成功")
 }
 
 func GetRawConfHandler(c *gin.Context) {
-	hash := c.Param("hash")
+	id := c.Param("id")
 	password := c.Query("password")
 
-	if strings.TrimSpace(hash) == "" {
+	if strings.TrimSpace(id) == "" {
 		c.String(http.StatusBadRequest, "参数错误")
 		return
 	}
 
-	shortLink, err := database.FindShortLinkByHash(hash)
+	shortLink, err := DB.FindShortLinkByID(id)
 	if err != nil {
-		c.String(http.StatusNotFound, "未找到短链接或密码错误")
+		c.String(http.StatusUnauthorized, "短链不存在或密码错误")
 		return
 	}
 
 	if shortLink.Password != "" && shortLink.Password != password {
-		c.String(http.StatusNotFound, "未找到短链接或密码错误")
+		c.String(http.StatusUnauthorized, "短链不存在或密码错误")
 		return
 	}
 
-	shortLink.LastRequestTime = time.Now().Unix()
-	err = database.SaveShortLink(shortLink)
+	err = DB.UpdataShortLink(shortLink.ID, "last_request_time", time.Now().Unix())
 	if err != nil {
-		respondWithError(c, http.StatusInternalServerError, "数据库错误")
+		c.String(http.StatusInternalServerError, "数据库错误")
 		return
 	}
 
-	scheme := "http"
-	if c.Request.TLS != nil {
-		scheme = "https"
+	template := ""
+	switch shortLink.Config.ClashType {
+	case model.Clash:
+		template = config.GlobalConfig.ClashTemplate
+	case model.ClashMeta:
+		template = config.GlobalConfig.MetaTemplate
 	}
-	host := c.Request.Host
-	targetPath := strings.TrimPrefix(shortLink.Url, "/")
-	requestURL := fmt.Sprintf("%s://%s/%s", scheme, host, targetPath)
-
-	client := &http.Client{
-		Timeout: 30 * time.Second, // 30秒超时
-	}
-
-	response, err := client.Get(requestURL)
+	sub, err := common.BuildSub(shortLink.Config.ClashType, shortLink.Config, template, config.GlobalConfig.CacheExpire, config.GlobalConfig.RequestRetryTimes)
 	if err != nil {
-		respondWithError(c, http.StatusInternalServerError, "请求错误: "+err.Error())
+		c.String(http.StatusInternalServerError, err.Error())
 		return
 	}
-	defer response.Body.Close()
 
-	all, err := io.ReadAll(response.Body)
+	if len(shortLink.Config.Subs) == 1 {
+		userInfoHeader, err := common.FetchSubscriptionUserInfo(shortLink.Config.Subs[0], "clash", config.GlobalConfig.RequestRetryTimes)
+		if err == nil {
+			c.Header("subscription-userinfo", userInfoHeader)
+		}
+	}
+
+	if shortLink.Config.NodeListMode {
+		nodelist := M.NodeList{}
+		nodelist.Proxy = sub.Proxy
+		marshal, err := yaml.Marshal(nodelist)
+		if err != nil {
+			c.String(http.StatusInternalServerError, "YAML序列化失败: "+err.Error())
+			return
+		}
+		c.String(http.StatusOK, string(marshal))
+		return
+	}
+	marshal, err := yaml.Marshal(sub)
 	if err != nil {
-		respondWithError(c, http.StatusInternalServerError, "读取错误: "+err.Error())
+		c.String(http.StatusInternalServerError, "YAML序列化失败: "+err.Error())
 		return
 	}
 
-	c.String(http.StatusOK, string(all))
+	c.String(http.StatusOK, string(marshal))
 }
 
 func GetRawConfUriHandler(c *gin.Context) {
-	hash := c.Query("hash")
+	id := c.Param("id")
 	password := c.Query("password")
 
-	if strings.TrimSpace(hash) == "" {
+	if strings.TrimSpace(id) == "" {
 		c.String(http.StatusBadRequest, "参数错误")
 		return
 	}
 
-	shortLink, err := database.FindShortLinkByHash(hash)
+	shortLink, err := DB.FindShortLinkByID(id)
 	if err != nil {
-		c.String(http.StatusNotFound, "未找到短链接或密码错误")
+		c.String(http.StatusUnauthorized, "短链不存在或密码错误")
 		return
 	}
 
 	if shortLink.Password != "" && shortLink.Password != password {
-		c.String(http.StatusNotFound, "未找到短链接或密码错误")
+		c.String(http.StatusUnauthorized, "短链不存在或密码错误")
 		return
 	}
 
-	c.String(http.StatusOK, shortLink.Url)
+	c.JSON(http.StatusOK, shortLink.Config)
+}
+
+func DeleteShortLinkHandler(c *gin.Context) {
+	id := c.Param("id")
+	password := c.Query("password")
+	shortLink, err := DB.FindShortLinkByID(id)
+	if err != nil {
+		c.String(http.StatusBadRequest, "短链不存在或密码错误")
+		return
+	}
+	if shortLink.Password != password {
+		c.String(http.StatusUnauthorized, "短链不存在或密码错误")
+		return
+	}
+
+	err = DB.DeleteShortLink(id)
+	if err != nil {
+		c.String(http.StatusInternalServerError, "删除失败", err)
+	}
 }

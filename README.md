@@ -105,35 +105,6 @@
 | rule    | string | 规则                                                             |
 | prepend | bool   | 如果为 `true` 规则将被添加到规则列表顶部，否则添加到规则列表底部 |
 
-#### `POST /short`
-
-获取短链，Content-Type 为 `application/json`
-具体参考使用可以参考 [api\templates\index.html](api/static/index.html)
-
-| Body 参数 | 类型   | 是否必须 | 默认值 | 说明                      |
-| --------- | ------ | -------- | ------ | ------------------------- |
-| url       | string | 是       | -      | 需要转换的 Query 参数部分 |
-| password  | string | 否       | -      | 短链密码                  |
-
-#### `GET /s/:hash`
-
-短链跳转
-`hash` 为动态路由参数，可以通过 `/short` 接口获取
-
-| Query 参数 | 类型   | 是否必须 | 默认值 | 说明     |
-| ---------- | ------ | -------- | ------ | -------- |
-| password   | string | 否       | -      | 短链密码 |
-
-#### `PUT /short`
-
-更新短链，Content-Type 为 `application/json`
-
-| Body 参数 | 类型   | 是否必须 | 默认值 | 说明                      |
-| --------- | ------ | -------- | ------ | ------------------------- |
-| url       | string | 是       | -      | 需要转换的 Query 参数部分 |
-| password  | string | 否       | -      | 短链密码                  |
-| hash      | string | 是       | -      | 短链 hash                 |
-
 ### 模板
 
 可以通过变量自定义模板中的策略组代理节点  

@@ -1,72 +1,77 @@
 package database
 
 import (
-	"encoding/json"
+	"context"
+	"errors"
+	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/bestnite/sub2clash/common"
 	"github.com/bestnite/sub2clash/model"
-
-	"go.etcd.io/bbolt"
+	"github.com/glebarez/sqlite"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
-var DB *bbolt.DB
-
-func ConnectDB() error {
-	path := filepath.Join("data", "sub2clash.db")
-
-	db, err := bbolt.Open(path, 0600, nil)
-	if err != nil {
-		return common.NewDatabaseConnectError(err)
-	}
-	DB = db
-
-	return db.Update(func(tx *bbolt.Tx) error {
-		_, err := tx.CreateBucketIfNotExists([]byte("ShortLinks"))
-		if err != nil {
-			return common.NewDatabaseConnectError(err)
-		}
-		return nil
-	})
+type Database struct {
+	db *gorm.DB
 }
 
-func FindShortLinkByHash(hash string) (*model.ShortLink, error) {
-	var shortLink model.ShortLink
-	err := DB.View(func(tx *bbolt.Tx) error {
-		b := tx.Bucket([]byte("ShortLinks"))
-		v := b.Get([]byte(hash))
-		if v == nil {
-			return common.NewRecordNotFoundError("ShortLink", hash)
-		}
-		return json.Unmarshal(v, &shortLink)
-	})
-	if err != nil {
+func ConnectDB() (*Database, error) {
+	path := filepath.Join("data", "sub2clash.db")
+	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
 		return nil, err
 	}
-	return &shortLink, nil
-}
-
-func SaveShortLink(shortLink *model.ShortLink) error {
-	return DB.Update(func(tx *bbolt.Tx) error {
-		b := tx.Bucket([]byte("ShortLinks"))
-		encoded, err := json.Marshal(shortLink)
-		if err != nil {
-			return err
-		}
-		return b.Put([]byte(shortLink.Hash), encoded)
-	})
-}
-
-func CheckShortLinkHashExists(hash string) (bool, error) {
-	exists := false
-	err := DB.View(func(tx *bbolt.Tx) error {
-		b := tx.Bucket([]byte("ShortLinks"))
-		v := b.Get([]byte(hash))
-		exists = v != nil
-		return nil
+	db, err := gorm.Open(sqlite.Open(path), &gorm.Config{
+		Logger: logger.Discard,
 	})
 	if err != nil {
+		return nil, common.NewDatabaseConnectError(err)
+	}
+
+	if err = db.AutoMigrate(&model.ShortLink{}); err != nil {
+		return nil, err
+	}
+
+	return &Database{
+		db: db,
+	}, nil
+}
+
+func (d *Database) FindShortLinkByID(id string) (model.ShortLink, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	return gorm.G[model.ShortLink](d.db).Where("id = ?", id).First(ctx)
+}
+
+func (d *Database) CreateShortLink(shortLink *model.ShortLink) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	return gorm.G[model.ShortLink](d.db).Create(ctx, shortLink)
+}
+
+func (d *Database) UpdataShortLink(id string, name string, value any) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	_, err := gorm.G[model.ShortLink](d.db).Where("id = ?", id).Update(ctx, name, value)
+	return err
+}
+
+func (d *Database) CheckShortLinkIDExists(id string) (bool, error) {
+	_, err := d.FindShortLinkByID(id)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return false, nil
+		}
 		return false, err
 	}
-	return exists, nil
+	return true, nil
+}
+
+func (d *Database) DeleteShortLink(id string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	_, err := gorm.G[model.ShortLink](d.db).Where("id = ?", id).Delete(ctx)
+	return err
 }
