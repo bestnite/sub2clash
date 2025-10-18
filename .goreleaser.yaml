@@ -19,7 +19,7 @@ builds:
       pre:
         - cmd: npm install
           dir: server/frontend
-        - cmd: APP_VERSION={{ .Version }} npm run build
+        - cmd: VITE_APP_VERSION={{ .Version }} npm run build
           dir: server/frontend
 archives:
   - formats: ["tar.gz"]

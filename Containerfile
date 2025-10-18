@@ -4,7 +4,7 @@ COPY server/frontend/package*.json ./
 RUN npm install
 COPY server/frontend .
 ARG version
-RUN APP_VERSION=${version} npm run build
+RUN VITE_APP_VERSION=${version} npm run build
 
 FROM golang:1.25 as builder
 LABEL authors="nite07"

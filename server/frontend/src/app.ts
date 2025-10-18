@@ -698,7 +698,7 @@ export class Sub2clashApp extends LitElement {
               >sub2clash</a
             >
           </p>
-          <p>Version: ${import.meta.env.APP_VERSION ?? "dev"}</p>
+          <p>Version: ${import.meta.env.VITE_APP_VERSION ?? "dev"}</p>
         </aside>
       </footer>
     `;
