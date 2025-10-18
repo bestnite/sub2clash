@@ -1,5 +1,8 @@
 version: 2
 project_name: sub2clash
+before:
+  hooks:
+    - bash ./build-frontend.sh {{ .Version }}
 builds:
   - env:
       - CGO_ENABLED=0
@@ -10,19 +13,10 @@ builds:
     goarch:
       - amd64
       - arm64
-      - "386"
     ldflags:
       - -s -w -X github.com/bestnite/sub2clash/constant.Version={{ .Version }}
     flags:
       - -trimpath
-    hooks:
-      pre:
-        - cmd: npm install
-          dir: server/frontend
-        - cmd: npm run build
-          dir: server/frontend
-          env:
-            - VITE_APP_VERSION={{ .Version }}
 archives:
   - formats: ["tar.gz"]
     format_overrides:
@@ -35,9 +29,9 @@ archives:
       - templates
 release:
   draft: true
-upx:
-  - enabled: true
-    compress: best
+# upx:
+#   - enabled: true
+#     compress: best
 nfpms:
   - id: sub2clash
     homepage: https://github.com/bestnite/sub2clash
