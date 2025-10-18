@@ -4,8 +4,8 @@ builds:
   - env:
       - CGO_ENABLED=0
     goos:
-      - windows
       - linux
+      - windows
       - darwin
     goarch:
       - amd64
@@ -19,8 +19,10 @@ builds:
       pre:
         - cmd: npm install
           dir: server/frontend
-        - cmd: VITE_APP_VERSION={{ .Version }} npm run build
+        - cmd: npm run build
           dir: server/frontend
+          env:
+            - VITE_APP_VERSION={{ .Version }}
 archives:
   - formats: ["tar.gz"]
     format_overrides:
