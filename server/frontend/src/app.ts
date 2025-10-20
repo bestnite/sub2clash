@@ -7,6 +7,7 @@ import { base64EncodeUnicode, base64decodeUnicode } from "./utils.js";
 import "./components/rule-provider-input.js";
 import "./components/rule-input.js";
 import "./components/rename-input.js";
+import "./components/short-link-input-group.js";
 
 @customElement("sub2clash-app")
 export class Sub2clashApp extends LitElement {
@@ -145,6 +146,7 @@ export class Sub2clashApp extends LitElement {
         // 设置返回的短链ID和密码
         this.shortLinkID = response.data.id;
         this.shortLinkPasswd = response.data.password;
+        this.showDialog("成功", "生成短链成功");
       })
       .catch((error) => {
         if (error.response && error.response.data) {
@@ -183,11 +185,11 @@ export class Sub2clashApp extends LitElement {
         }
       )
       .then(() => {
-        this.showDialog("成功", "更新成功");
+        this.showDialog("成功", "更新短链成功");
       })
       .catch((error) => {
         if (error.response && error.response.status === 401) {
-          this.showDialog("", "密码错误");
+          this.showDialog("", "短链不存在或密码错误");
         } else if (error.response && error.response.data) {
           this.showDialog("", "更新短链失败：" + error.response.data);
         } else {
@@ -214,7 +216,7 @@ export class Sub2clashApp extends LitElement {
         },
       })
       .then(() => {
-        this.showDialog("成功", "删除成功");
+        this.showDialog("成功", "删除短链成功");
       })
       .catch((error) => {
         if (error.response && error.response.status === 401) {
@@ -609,8 +611,7 @@ export class Sub2clashApp extends LitElement {
           </fieldset>
 
           <fieldset class="fieldset mb-8">
-            <legend
-              class="fieldset-legend text-2xl font-semibold mb-4 text-center">
+            <legend class="fieldset-legend text-2xl font-semibold mb-4">
               输出配置
             </legend>
 
@@ -637,55 +638,19 @@ export class Sub2clashApp extends LitElement {
               </div>
             </div>
 
-            <div class="form-control mb-2">
-              <div class="join w-full">
-                <input
-                  class="input input-bordered w-1/2 join-item"
-                  type="text"
-                  placeholder="ID（可选）"
-                  .value="${this.shortLinkID}"
-                  @change="${(e: Event) => {
-                    this.shortLinkID = (e.target as HTMLInputElement).value;
-                  }}" />
-                <input
-                  class="input input-bordered w-1/2 join-item"
-                  type="text"
-                  placeholder="密码"
-                  .value="${this.shortLinkPasswd}"
-                  @change="${(e: Event) => {
-                    this.shortLinkPasswd = (e.target as HTMLInputElement).value;
-                  }}" />
-                <button
-                  class="btn btn-primary join-item"
-                  type="button"
-                  @click="${this.generateShortLink}">
-                  生成短链
-                </button>
-                <button
-                  class="btn btn-primary join-item"
-                  @click="${this.updateShortLink}"
-                  type="button">
-                  更新短链
-                </button>
-                <button
-                  class="btn btn-primary join-item"
-                  @click="${this.deleteShortLink}"
-                  type="button">
-                  删除短链
-                </button>
-                <button
-                  class="btn btn-primary join-item"
-                  type="button"
-                  @click="${(e: Event) => {
-                    this.copyToClipboard(
-                      `${window.location.origin}${window.location.pathname}s/${this.shortLinkID}?password=${this.shortLinkPasswd}`,
-                      e.target as HTMLButtonElement
-                    );
-                  }}">
-                  复制短链
-                </button>
-              </div>
-            </div>
+            <short-link-input-group
+              .id="${this.shortLinkID}"
+              .passwd="${this.shortLinkPasswd}"
+              @id-change="${(e: Event) => {
+                this.shortLinkID = (e.target as HTMLInputElement).value;
+              }}"
+              @passwd-change="${(e: Event) => {
+                this.shortLinkPasswd = (e.target as HTMLInputElement).value;
+              }}"
+              @generate-btn-click="${this.generateShortLink}"
+              @update-btn-click="${this.updateShortLink}"
+              @delete-btn-click="${this.deleteShortLink}">
+            </short-link-input-group>
           </fieldset>
         </form>
       </div>
