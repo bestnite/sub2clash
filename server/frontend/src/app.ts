@@ -240,6 +240,9 @@ export class Sub2clashApp extends LitElement {
       .get(`./short/${s[1]}`)
       .then((resp) => {
         this.config = resp.data;
+        const parsedUrl = new URL(this.reverseUrl);
+        this.shortLinkID = parsedUrl.pathname.split("/").filter(Boolean).pop() ?? "";
+        this.shortLinkPasswd = parsedUrl.searchParams.get("password") ?? "";
       })
       .catch((err: AxiosError) => {
         if (err.response && err.response.status == 401) {
