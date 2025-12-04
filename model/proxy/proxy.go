@@ -85,6 +85,7 @@ type Proxy struct {
 	Vless
 	Vmess
 	Socks
+	Tuic
 }
 
 func (p Proxy) MarshalYAML() (any, error) {
@@ -178,6 +179,16 @@ func (p Proxy) MarshalYAML() (any, error) {
 			Type:  p.Type,
 			Name:  p.Name,
 			Socks: p.Socks,
+		}, nil
+	case "tuic":
+		return struct {
+			Type string `yaml:"type"`
+			Name string `yaml:"name"`
+			Tuic `yaml:",inline"`
+		}{
+			Type: p.Type,
+			Name: p.Name,
+			Tuic: p.Tuic,
 		}, nil
 	default:
 		return nil, fmt.Errorf("unsupported proxy type: %s", p.Type)
@@ -296,7 +307,16 @@ func (p *Proxy) UnmarshalYAML(node *yaml.Node) error {
 			return err
 		}
 		p.Socks = data.Socks
-
+	case "tuic":
+		var data struct {
+			Type string `yaml:"type"`
+			Name string `yaml:"name"`
+			Tuic `yaml:",inline"`
+		}
+		if err := node.Decode(&data); err != nil {
+			return err
+		}
+		p.Tuic = data.Tuic
 	default:
 		return fmt.Errorf("unsupported proxy type: %s", temp.Type)
 	}
