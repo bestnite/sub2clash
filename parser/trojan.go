@@ -66,7 +66,7 @@ func (p *TrojanParser) Parse(config ParseConfig, proxy string) (P.Proxy, error) 
 		Port:           P.IntOrString(port),
 		Password:       password,
 		Network:        network,
-		UDP:            udp == "true",
+		UDP:            udp == "true" || config.UseUDP,
 		SkipCertVerify: insecureBool,
 	}
 

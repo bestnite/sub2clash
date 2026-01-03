@@ -69,7 +69,7 @@ func (p *VlessParser) Parse(config ParseConfig, proxy string) (P.Proxy, error) {
 		Port:           P.IntOrString(port),
 		UUID:           uuid,
 		Flow:           flow,
-		UDP:            udp == "true",
+		UDP:            udp == "true" || config.UseUDP,
 		SkipCertVerify: insecureBool,
 	}
 

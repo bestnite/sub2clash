@@ -83,7 +83,7 @@ func (p *SocksParser) Parse(config ParseConfig, proxy string) (P.Proxy, error) {
 			UserName: username,
 			Password: password,
 			TLS:      tls == "true",
-			UDP:      udp == "true",
+			UDP:      udp == "true" || config.UseUDP,
 		},
 	}, nil
 }
