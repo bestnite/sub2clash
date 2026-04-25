@@ -41,9 +41,7 @@ func ConvertHandler() func(c *gin.Context) {
 		}
 
 		if query.NodeListMode {
-			nodelist := M.NodeList{}
-			nodelist.Proxy = sub.Proxy
-			marshal, err := yaml.Marshal(nodelist)
+			marshal, err := sub.MarshalNodeListYAML()
 			if err != nil {
 				c.String(http.StatusInternalServerError, "YAML序列化失败: "+err.Error())
 				return

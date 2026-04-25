@@ -47,7 +47,7 @@ func GetContryName(countryKey string) string {
 }
 
 func AddProxy(
-	sub *model.Subscription, autotest bool,
+	sub *generatedConfig, autotest bool,
 	lazy bool, clashType model.ClashType, proxies ...proxy.Proxy,
 ) {
 	proxyTypes := model.GetSupportProxyTypes(clashType)
@@ -68,26 +68,26 @@ func AddProxy(
 			}
 		}
 		if !haveProxyGroup {
-			var newGroup model.ProxyGroup
+			var newGroup generatedGroup
 			if !autotest {
-				newGroup = model.ProxyGroup{
-					Name:          countryName,
-					Type:          "select",
-					Proxies:       []string{proxy.Name},
-					IsCountryGrop: true,
-					Size:          1,
+				newGroup = generatedGroup{
+					Name:      countryName,
+					Type:      "select",
+					Proxies:   []string{proxy.Name},
+					IsCountry: true,
+					Size:      1,
 				}
 			} else {
-				newGroup = model.ProxyGroup{
-					Name:          countryName,
-					Type:          "url-test",
-					Proxies:       []string{proxy.Name},
-					IsCountryGrop: true,
-					Url:           "http://www.gstatic.com/generate_204",
-					Interval:      300,
-					Tolerance:     50,
-					Lazy:          lazy,
-					Size:          1,
+				newGroup = generatedGroup{
+					Name:      countryName,
+					Type:      "url-test",
+					Proxies:   []string{proxy.Name},
+					IsCountry: true,
+					Url:       "http://www.gstatic.com/generate_204",
+					Interval:  300,
+					Tolerance: 50,
+					Lazy:      lazy,
+					Size:      1,
 				}
 			}
 			sub.ProxyGroup = append(sub.ProxyGroup, newGroup)

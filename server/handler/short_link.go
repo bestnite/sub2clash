@@ -12,10 +12,9 @@ import (
 	"github.com/bestnite/sub2clash/common/database"
 	"github.com/bestnite/sub2clash/config"
 	"github.com/bestnite/sub2clash/model"
-	M "github.com/bestnite/sub2clash/model"
-	"gopkg.in/yaml.v3"
 
 	"github.com/gin-gonic/gin"
+	"gopkg.in/yaml.v3"
 )
 
 type shortLinkGenRequset struct {
@@ -191,9 +190,7 @@ func GetRawConfHandler(c *gin.Context) {
 	}
 
 	if shortLink.Config.NodeListMode {
-		nodelist := M.NodeList{}
-		nodelist.Proxy = sub.Proxy
-		marshal, err := yaml.Marshal(nodelist)
+		marshal, err := sub.MarshalNodeListYAML()
 		if err != nil {
 			c.String(http.StatusInternalServerError, "YAML序列化失败: "+err.Error())
 			return
