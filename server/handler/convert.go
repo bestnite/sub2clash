@@ -7,7 +7,6 @@ import (
 	"github.com/bestnite/sub2clash/common"
 	"github.com/bestnite/sub2clash/config"
 	"github.com/bestnite/sub2clash/model"
-	M "github.com/bestnite/sub2clash/model"
 
 	"github.com/gin-gonic/gin"
 	"gopkg.in/yaml.v3"
@@ -15,7 +14,7 @@ import (
 
 func ConvertHandler() func(c *gin.Context) {
 	return func(c *gin.Context) {
-		query, err := M.ParseConvertQuery(c)
+		query, err := model.ParseConvertQuery(c)
 		if err != nil {
 			c.String(http.StatusBadRequest, err.Error())
 			return
