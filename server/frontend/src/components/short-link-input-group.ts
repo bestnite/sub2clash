@@ -1,6 +1,7 @@
 import { html, LitElement, unsafeCSS } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import globalStyles from "../index.css?inline";
+import { appUrl } from "../utils.js";
 
 @customElement("short-link-input-group")
 export class ShortLinkInputGroup extends LitElement {
@@ -123,7 +124,7 @@ export class ShortLinkInputGroup extends LitElement {
       type="button"
       @click="${(e: Event) => {
         this.copyToClipboard(
-          `${window.location.origin}${window.location.pathname}s/${this.id}?password=${this.passwd}`,
+          appUrl(`s/${this.id}?${new URLSearchParams({ password: this.passwd })}`),
           e.target as HTMLButtonElement
         );
       }}">

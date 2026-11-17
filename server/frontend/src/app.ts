@@ -3,7 +3,7 @@ import { customElement, query, state } from "lit/decorators.js";
 import globalStyles from "./index.css?inline";
 import { type Config, type Rule, type RuleProvider } from "./interface.js";
 import axios, { AxiosError } from "axios";
-import { base64EncodeUnicode, base64decodeUnicode } from "./utils.js";
+import { appUrl, base64EncodeUnicode, base64decodeUnicode } from "./utils.js";
 import "./components/rule-provider-input.js";
 import "./components/rule-input.js";
 import "./components/rename-input.js";
@@ -42,14 +42,11 @@ export class Sub2clashApp extends LitElement {
       return;
     }
     const oldValue = this._config;
-    this.configUrl = `${
-      window.location.origin
-    }${window.location.pathname.replace(
-      /\/$/,
-      ""
-    )}/convert/${base64EncodeUnicode(JSON.stringify(value))
-      .replace(/\+/g, "-")
-      .replace(/\//g, "_")}`;
+    this.configUrl = appUrl(
+      `convert/${base64EncodeUnicode(JSON.stringify(value))
+        .replace(/\+/g, "-")
+        .replace(/\//g, "_")}`
+    );
     this._config = value;
     this.requestUpdate("config", oldValue);
   }
@@ -130,7 +127,7 @@ export class Sub2clashApp extends LitElement {
     }
     axios
       .post(
-        "./short",
+        appUrl("short"),
         {
           config: this.config,
           password: this.shortLinkPasswd,
@@ -172,7 +169,7 @@ export class Sub2clashApp extends LitElement {
     }
     axios
       .put(
-        "./short",
+        appUrl("short"),
         {
           id: this.shortLinkID,
           config: this.config,
@@ -210,7 +207,7 @@ export class Sub2clashApp extends LitElement {
     const params = new URLSearchParams();
     params.append("password", this.shortLinkPasswd);
     axios
-      .delete(`./short/${this.shortLinkID}?${params.toString()}`, {
+      .delete(appUrl(`short/${this.shortLinkID}?${params.toString()}`), {
         headers: {
           "Content-Type": "application/json",
         },
@@ -237,7 +234,7 @@ export class Sub2clashApp extends LitElement {
     }
 
     axios
-      .get(`./short/${s[1]}`)
+      .get(appUrl(`short/${s[1]}`))
       .then((resp) => {
         this.config = resp.data;
         const parsedUrl = new URL(this.reverseUrl);

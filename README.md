@@ -28,6 +28,32 @@
 - [docker compose](./compose.yml)
 - 运行[二进制文件](https://github.com/bestnite/sub2clash/releases/latest)
 
+#### Reverse proxy under a subpath
+
+The same build supports both `/` and a subpath such as `/sub2clash/`.
+Redirect the path without a trailing slash, and strip the prefix before
+forwarding requests to sub2clash:
+
+```nginx
+location = /sub2clash {
+    return 308 /sub2clash/$is_args$args;
+}
+
+location /sub2clash/ {
+    # The trailing slash strips /sub2clash/ from the upstream request.
+    proxy_pass http://127.0.0.1:8011/;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+}
+```
+
+Open `https://www.example.com/sub2clash/`. Assets, API requests, conversion
+links, and short links stay under this prefix. No application configuration
+or separate frontend build is required. The trailing-slash redirect is required
+so the browser resolves relative assets inside the subpath.
+
 ### 配置
 
 支持多种配置方式，按优先级排序：
